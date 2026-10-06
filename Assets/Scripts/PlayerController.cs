@@ -7,10 +7,10 @@ public class PlayerController : MonoBehaviour
 
     private float movementX;
 
-    public float speed = 10.0f;
+    private float speed = 14.0f;
 
     // How far left/right of center the player can go
-    public float xBound = 8.0f;
+    private float xBound = 20.0f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
