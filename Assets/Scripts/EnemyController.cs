@@ -13,6 +13,8 @@ public class EnemyController : MonoBehaviour
 
     private float fireTimer;
 
+    private int health = 2;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -31,13 +33,24 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    public void TakeDamage(int amount)
+    {
+        health -= amount;
+
+        if (health <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
     void Fire()
     {
         // Spawn in front of enemy, toward player
         Vector3 spawnPosition = transform.position + Vector3.back * spawnOffset;
 
         // Creates bullet in scene root
-        Instantiate(bullet, spawnPosition, Quaternion.identity);
+        GameObject newBullet = Instantiate(bullet, spawnPosition, Quaternion.identity);
+
+        newBullet.GetComponent<BulletController>().Init(Vector3.back, false);
     }
 
     void ResetFireTimer()

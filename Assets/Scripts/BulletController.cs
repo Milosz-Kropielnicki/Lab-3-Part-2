@@ -7,6 +7,16 @@ public class BulletController : MonoBehaviour
     // Destroy the bullet after this period
     private float lifetime = 5.0f;
 
+    private Vector3 direction = Vector3.back;
+
+    private bool firedByPlayer;
+
+    public void Init(Vector3 moveDirection, bool isPlayerBullet)
+    {
+        direction = moveDirection;
+        firedByPlayer = isPlayerBullet;
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -16,6 +26,20 @@ public class BulletController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.position += Vector3.back * speed * Time.deltaTime;
+        transform.position += direction * speed * Time.deltaTime;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (firedByPlayer && other.TryGetComponent(out EnemyController enemy))
+        {
+            enemy.TakeDamage(1);
+            Destroy(gameObject);
+        }
+        else if (!firedByPlayer && other.TryGetComponent(out PlayerController player))
+        {
+            player.TakeDamage(1);
+            Destroy(gameObject);
+        }
     }
 }
