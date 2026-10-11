@@ -1,13 +1,21 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody rb;
 
+    private Vector3 startPosition;
     private float movementX;
-
     private float speed = 14.0f;
+
+    private Renderer playerRenderer;
+
+    private float invulnerableTime = 2.0f;
+    private bool isInvulnerable;
+
+    private float flashInterval = 0.1f;
 
     private int health = 3;
 
@@ -25,6 +33,9 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+
+        playerRenderer = GetComponentInChildren<Renderer>();
+        startPosition = transform.position;
     }
 
     void OnMove(InputValue movementValue)
@@ -52,12 +63,43 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        if (isInvulnerable)
+        {
+            return;
+        }
+
         health -= amount;
 
         if (health <= 0)
         {
             Destroy(gameObject);
+            return;
         }
+
+        rb.position = startPosition;
+        transform.position = startPosition;
+        rb.linearVelocity = Vector3.zero;
+
+        StartCoroutine(Invulnerability());
+    }
+
+    IEnumerator Invulnerability()
+    {
+        isInvulnerable = true;
+
+        float endTime = Time.time + invulnerableTime;
+
+        // Mesh toggling
+        while (Time.time < endTime)
+        {
+            playerRenderer.enabled = !playerRenderer.enabled;
+
+            yield return new WaitForSeconds(flashInterval);
+        }
+
+        // Make player visible when done
+        playerRenderer.enabled = true;
+        isInvulnerable = false;
     }
 
     void FixedUpdate()
