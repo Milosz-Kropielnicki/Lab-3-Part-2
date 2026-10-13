@@ -29,7 +29,11 @@ public class PlayerController : MonoBehaviour
     private float fireCooldown = 0.3f;
     private float nextFireTime;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // --- Powerup state ---
+    private float upgradeDuration = 10.0f;
+    private bool isUpgraded;
+    private Coroutine upgradeRoutine;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,7 +45,6 @@ public class PlayerController : MonoBehaviour
     void OnMove(InputValue movementValue)
     {
         Vector2 movementVector = movementValue.Get<Vector2>();
-
         movementX = movementVector.x;
     }
 
@@ -54,11 +57,46 @@ public class PlayerController : MonoBehaviour
 
         nextFireTime = Time.time + fireCooldown;
 
+        if (isUpgraded)
+        {
+            // Triple shot: center + slight left/right angles
+            FireBullet(Vector3.forward, 0.0f);
+            FireBullet(Quaternion.Euler(0, -15, 0) * Vector3.forward, -0.5f);
+            FireBullet(Quaternion.Euler(0, 15, 0) * Vector3.forward, 0.5f);
+        }
+        else
+        {
+            FireBullet(Vector3.forward, 0.0f);
+        }
+    }
+
+    void FireBullet(Vector3 direction, float xOffset)
+    {
         Vector3 spawnPosition = transform.position + Vector3.forward * spawnOffset;
+        spawnPosition += Vector3.right * xOffset;
 
         GameObject newBullet = Instantiate(bullet, spawnPosition, Quaternion.identity);
+        newBullet.GetComponent<BulletController>().Init(direction, true, 1);
+    }
 
-        newBullet.GetComponent<BulletController>().Init(Vector3.forward, true);
+    public void UpgradeWeapon()
+    {
+        isUpgraded = true;
+
+        // Refresh timer if already upgraded
+        if (upgradeRoutine != null)
+        {
+            StopCoroutine(upgradeRoutine);
+        }
+        upgradeRoutine = StartCoroutine(UpgradeTimer());
+    }
+
+    IEnumerator UpgradeTimer()
+    {
+        yield return new WaitForSeconds(upgradeDuration);
+
+        isUpgraded = false;
+        upgradeRoutine = null;
     }
 
     public void TakeDamage(int amount)
@@ -89,25 +127,20 @@ public class PlayerController : MonoBehaviour
 
         float endTime = Time.time + invulnerableTime;
 
-        // Mesh toggling
         while (Time.time < endTime)
         {
             playerRenderer.enabled = !playerRenderer.enabled;
-
             yield return new WaitForSeconds(flashInterval);
         }
 
-        // Make player visible when done
         playerRenderer.enabled = true;
         isInvulnerable = false;
     }
 
     void FixedUpdate()
     {
-        // Set the velocity directly so movement starts and stops instantly
         rb.linearVelocity = new Vector3(movementX * speed, 0.0f, 0.0f);
 
-        // Keep the player on screen
         Vector3 position = rb.position;
         position.x = Mathf.Clamp(position.x, -xBound, xBound);
         rb.position = position;

@@ -10,20 +10,25 @@ public class BulletController : MonoBehaviour
     private Vector3 direction = Vector3.back;
 
     private bool firedByPlayer;
+    private int damage = 1;
 
     public void Init(Vector3 moveDirection, bool isPlayerBullet)
     {
-        direction = moveDirection;
-        firedByPlayer = isPlayerBullet;
+        Init(moveDirection, isPlayerBullet, 1);
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public void Init(Vector3 moveDirection, bool isPlayerBullet, int bulletDamage)
+    {
+        direction = moveDirection;
+        firedByPlayer = isPlayerBullet;
+        damage = bulletDamage;
+    }
+
     void Start()
     {
         Destroy(gameObject, lifetime);
     }
 
-    // Update is called once per frame
     void Update()
     {
         transform.position += direction * speed * Time.deltaTime;
@@ -33,7 +38,7 @@ public class BulletController : MonoBehaviour
     {
         if (firedByPlayer && other.TryGetComponent(out EnemyController enemy))
         {
-            enemy.TakeDamage(1);
+            enemy.TakeDamage(damage);
             Destroy(gameObject);
         }
         else if (!firedByPlayer && other.TryGetComponent(out PlayerController player))
